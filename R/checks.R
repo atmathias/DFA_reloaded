@@ -28,7 +28,7 @@ df_dfa_choices <-  readxl::read_excel("inputs/UGA2103_Digital_Finace_HH_Tool_Jun
 
 logical_output <- list()
 
-# Data not meeting minimal requirements---------------------------------------
+# data not meeting minimal requirements---------------------------------------
 
 # no consent surveys
 df_no_consent <- df_dfa_data %>% 
@@ -54,13 +54,13 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_no
 
 # age below 18
 df_repondent_below_age <-  df_dfa_data %>% 
-  filter(respondent_age > 18) %>% 
+  filter(respondent_age < 18 | respondent_age > 100) %>% 
   mutate(m.type = "remove_survey",
           m.name = "respondent_age",
           m.current_value = as.character(respondent_age),
           m.value = "",
-          m.issue_id = "logic_m_requirement_respondent_below_age",
-          m.issue = "below_age",
+          m.issue_id = "logic_m_requirement_respondent_age_out_of_range",
+          m.issue = "respondent_age_out_of_range",
           m.other_text = "",
           m.checked_by = "",
           m.checked_date = as_date(today()),
