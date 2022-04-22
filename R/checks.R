@@ -145,7 +145,38 @@ df_child_survey_duration <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_child_survey_duration")        
 
 
+# Time between surveys
+min_time_btn_surveys <- 5
 
+df_time_btn_surveys <- df_dfa_data %>% 
+  group_by(m.start_date, m.enumerator_id) %>% 
+  filter(n()>1) %>% 
+  arrange(start, .by_group = TRUE) %>% 
+  mutate(m.time_btn_surveys = lubridate::time_length(start - lag(end, default = first(start)), unit = "min"),
+         m.time_btn_surveys = ceiling(m.time_btn_surveys)) %>% 
+  filter(m.time_btn_surveys !=0 &m.time_btn_surveys < min_time_btn_surveys) %>% 
+  mutate(m.type = "remove_survey",
+         m.name = "point_number",
+         m.current_value = "",
+         m.value = "",
+         m.issue.id = "less_time_btn_surveys",
+         m.issue = glue("{m.time_btn_surveys} minutes taken between surveys"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_time_btn_surveys")
+    
+  
+         
+  
 
 
 
