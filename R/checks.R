@@ -201,6 +201,42 @@ df_respondent_nationality <- df_dfa_data %>%
 
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_nationality")
 
+# Anyone who selected host for "type of community" and answers "refugee ID" or "beneficiary ID" should be checked.
+
+df_id_type_selected <- df_dfa_data %>% 
+   filter(status == "host_community", str_detect(string = id_type, pattern = "unhcr_refugee_id | ug_refugee_id | benef_id_not_unhcr")) %>% 
+  mutate(m.type = "change_response",
+         m.name = "id_type",
+         m.current_value = id_type,
+         m.value = "",
+         m.issue_id = "logic_issue_status",
+         m.issue = glue("status: host_community but refugee id_type: {id_type}"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "1",
+         m.adjust_log = "",
+         m.uuid_cl = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>%   
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_nationality")
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
