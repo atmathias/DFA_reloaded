@@ -56,28 +56,42 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_no
 df_repondent_below_age <-  df_dfa_data %>% 
   filter(respondent_age < 18 | respondent_age > 100) %>% 
   mutate(m.type = "remove_survey",
-          m.name = "respondent_age",
-          m.current_value = as.character(respondent_age),
-          m.value = "",
-          m.issue_id = "logic_m_requirement_respondent_age_out_of_range",
-          m.issue = "respondent_age_out_of_range",
-          m.other_text = "",
-          m.checked_by = "",
-          m.checked_date = as_date(today()),
-          m.comment = "", 
-          m.reviewed = "1",
-          m.adjust_log = "",
-          m.uuid_cl = "",
-          m.so_sm_choices = "") %>% 
-    dplyr::select(starts_with("m.")) %>% 
-    rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
-         
-    add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_repondent_below_age")
-    
+         m.name = "respondent_age",
+         m.current_value = as.character(respondent_age),
+         m.value = "",
+         m.issue_id = "logic_m_requirement_respondent_age_out_of_range",
+         m.issue = "respondent_age_out_of_range",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "1",
+         m.adjust_log = "",
+         m.uuid_cl = "",
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_repondent_below_age")
+
 
 # data testing
 df_data_tesing <- df_dfa_data %>% 
-  filter(m.start_date < as_date("2021-08-28") | str_detect(string = point_number, pattern = fixed('test', ignore_case = TRUE))) %>% 
+  filter(m.start_date <= as_date("2021-08-29") | m.point_number == "13m." | 
+         m.start_date %in% c(as_date("2021-09-08"), as_date("2021-09-09"), as_date("2021-09-21")) |
+         str_detect(string = point_number, pattern = fixed('test', ignore_case = TRUE)) |
+         m.uuid %in% c("27b0ffe2-8d47-4897-b402-1928fd23cfb3",
+                        "40d216de-76db-42b7-9105-aea1ce234489",
+                        "f2f648df-55d6-4b9d-93ca-aa87c3bc30c7",
+                        "4167b891-b1ff-46b1-856b-532dd28e7a1e",
+                        "d7bde578-cdc2-4d77-b31b-a15c4cec9d38",
+                        "4f3afa4f-a065-4f6d-bd25-9919902f9ce0",
+                        "a89d0010-d626-4a4f-8b8c-e83e8fade349",
+                        "27ac9f75-3954-4c55-90a3-b5b09984fe7a",
+                        "48ee8073-a0d7-460f-9867-304a47bdb1fc",
+                        "b0a1c83dcdb24671b9eed78d7a77786f",
+                        "c5c9b13aa6cd43338e113d8c647c04ed",
+                        "d8936d35-7e1c-48d9-bafa-b25e758c05eb")) %>% 
   mutate(m.type = "remove_survey",
          m.name = "",
          m.current_value = "",
@@ -107,7 +121,11 @@ min_survey_time <- 30
 Max_survey_time <- 120
 
 df_child_survey_duration <- df_dfa_survey %>% 
-  mutate(m.survey_duration = )
+  mutate(interview.survey_duration = lubridate::time_length(end - start, unit = "min"),
+         interview.survey_duration = ceiling(interview.survey_duration),
+         
+         m.type 
+  )
 
 
 
