@@ -53,7 +53,7 @@ df_no_consent <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_no_consent")
 
 # age below 18
-df_repondent_below_age <-  df_dfa_data %>% 
+df_respondent_age_out_of_range <-  df_dfa_data %>% 
   filter(respondent_age < 18 | respondent_age > 100) %>% 
   mutate(m.type = "remove_survey",
          m.name = "respondent_age",
@@ -72,7 +72,7 @@ df_repondent_below_age <-  df_dfa_data %>%
   dplyr::select(starts_with("m.")) %>% 
   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
-add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_repondent_below_age")
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_age_out_of_range")
 
 
 # data testing
@@ -119,7 +119,7 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_da
 min_survey_time <- 30
 Max_survey_time <- 120
 
-df_child_survey_duration <- df_dfa_data %>% 
+df_survey_duration <- df_dfa_data %>% 
   mutate(interview.survey_duration = lubridate::time_length(end - start, unit = "min"),
          interview.survey_duration = ceiling(interview.survey_duration),
          m.type = "remove_survey",
@@ -142,7 +142,7 @@ df_child_survey_duration <- df_dfa_data %>%
   dplyr::select(starts_with("m.")) %>% 
   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
-add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_child_survey_duration")        
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_survey_duration")        
 
 
 # Time between surveys
@@ -177,8 +177,29 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_ti
 
 # logical checks -------------------------------------------------------------
 
+# Anyone who selected "ugandan" and previously answered community_type = refugee, should be checked.
 
+df_respondent_nationality <- df_dfa_data %>% 
+  filter(status == "refugee", nationality == "uganda") %>% 
+  mutate(m.type = "change_response",
+         m.name = "nationality",
+         m.current_value = nationality,
+         m.value = "",
+         m.issue_id = "logic_issue_nationality",
+         m.issue = "nationality: ugandan but community_type: refugee",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "1",
+         m.adjust_log = "",
+         m.uuid_cl = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>%   
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_nationality")
 
 
 
