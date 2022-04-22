@@ -154,7 +154,7 @@ df_time_btn_surveys <- df_dfa_data %>%
   arrange(start, .by_group = TRUE) %>% 
   mutate(m.time_btn_surveys = lubridate::time_length(start - lag(end, default = first(start)), unit = "min"),
          m.time_btn_surveys = ceiling(m.time_btn_surveys)) %>% 
-  filter(m.time_btn_surveys !=0 &m.time_btn_surveys < min_time_btn_surveys) %>% 
+  filter(m.time_btn_surveys !=0 & m.time_btn_surveys < min_time_btn_surveys) %>% 
   mutate(m.type = "remove_survey",
          m.name = "point_number",
          m.current_value = "",
@@ -173,9 +173,8 @@ df_time_btn_surveys <- df_dfa_data %>%
   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_time_btn_surveys")
-    
-  
-         
+
+
   
 
 
