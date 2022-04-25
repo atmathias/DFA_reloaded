@@ -281,9 +281,32 @@ df_type_phone_owned <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_type_phone_owned")
 
 
+# If previously selected "0" in response to "how many mobile phone numbers do you have" the survye needs to be checked.
+# walk_top_upun_expected_response
+# add this constraint to odk
 
+df_walk_top_up <- df_dfa_data %>% 
+  filter(walk_top_up %in% c("no_need_to_walk", "regularly_walk", "walk_specifically") , no_phones_hh_owns == 0) %>%
+  mutate(m.type = NA,
+         m.name = "type_phone_owned",
+         m.current_value = "walk_top_up",
+         m.value = "none",
+         m.issue_id = "un_expected_response",
+         m.issue = NA,
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+    dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
-
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_walk_top_up")
+    
+  
 
 
 
