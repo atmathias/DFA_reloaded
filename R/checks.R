@@ -226,9 +226,30 @@ df_id_type_selected <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_nationality")
 
 
+# If respondents have selected a language but have NOT selected the same language that they previously selected for their main language, we need to check the survye.
 
 
+df_language_selected <- df_dfa_data %>% 
+  mutate(m.type = "change_response",
+         m.name = "main_language",
+         m.current_value = main_language,
+         m.value = "",
+         m.issue_id = ifelse(str_detect(string = language_understand, pattern = main_language, negate = TRUE) , 
+                             "logic_issue_main_language", "main_language_also_understood"),
+         m.issue = glue("main_language: {main_language} not in understood languages: {language_understand}"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  filter(m.issue_id == "logic_issue_main_language") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_language_selected")
 
 
 
