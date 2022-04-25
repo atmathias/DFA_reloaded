@@ -204,7 +204,7 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_re
 # Anyone who selected host for "type of community" and answers "refugee ID" or "beneficiary ID" should be checked.
 
 df_id_type_selected <- df_dfa_data %>% 
-   filter(status == "host_community", str_detect(string = id_type, pattern = "unhcr_refugee_id | ug_refugee_id | benef_id_not_unhcr")) %>% 
+   filter(status == "host_community", str_detect(string = id_type, pattern = "unhcr_refugee_id|ug_refugee_id|benef_id_not_unhcr")) %>% 
   mutate(m.type = "change_response",
          m.name = "id_type",
          m.current_value = id_type,
@@ -252,6 +252,13 @@ df_language_selected <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_language_selected")
 
 
+
+# If respondent has selected "none" in addition to another option, the survey needs to be checked.
+# type_phone_owned
+
+df_type_phone_owned <- df_dfa_data %>% 
+  rowwise() %>% 
+  mutate(interview.type_phone_owned_count = sum(c_across(starts_with("type_phone_owned"))))
 
 
 
