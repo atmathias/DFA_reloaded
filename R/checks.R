@@ -258,12 +258,27 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_la
 
 df_type_phone_owned <- df_dfa_data %>% 
   rowwise() %>% 
-  mutate(interview.type_phone_owned_count = sum(c_across(starts_with("type_phone_owned"))))
+  mutate(interview.type_phone_owned_count = sum(c_across(starts_with("type_phone_owned/")), na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  mutate(m.type = "remove_option",
+         m.name = "type_phone_owned",
+         m.current_value = "none",
+         m.value = "none",
+         m.issue_id = ifelse(interview.type_phone_owned_count > 1 & `type_phone_owned/none` == 1, "logic_issue_type_phone_owned", "expected_response"),
+         m.issue = glue("none option selected with other options: {type_phone_owned}"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  filter(m.issue_id == "logic_issue_type_phone_owned") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
-
-
-
-
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_type_phone_owned")
 
 
 
