@@ -307,7 +307,29 @@ df_walk_top_up <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_walk_top_up")
     
   
+# If they previously selected "yes" to having mobile internet coverage (Q56) and now replied "no", the survey needs to be checked.
+# mobile_internet == "yes" and internet_awareness == "no"
 
+df_internet_awreness <- df_dfa_data %>% 
+  filter(mobile_internet == "yes", internet_awareness == "no") %>%
+  mutate(m.type = "change_response",
+         m.name = "internet_awareness",
+         m.current_value = internet_awareness,
+         m.value = NA,
+         m.issue_id = "logic_issue_internet_awareness",
+         m.issue = "mobile_internet: yes but internet_awareness: no",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_internet_awreness")
 
 
 
