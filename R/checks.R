@@ -332,6 +332,55 @@ df_internet_awreness <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_internet_awreness")
 
 
+# If respondents who previously said they DO NOT have access to a feature phone or smart phone are now selecting uses for their phones that can only be done online (e.g. social media, access to information online etc.), survey needs to be checked
+# # mobile_phone_use
+
+df_mobile_phone_use <- df_dfa_data %>% 
+   filter(str_detect(string = type_phone_owned, pattern = "none|basic_phone")) %>% 
+   mutate(m.type = NA,
+          m.name = "mobile_phone_use",
+          m.current_value = NA,
+          m.value = NA,
+          m.issue_id = ifelse(str_detect(string = mobile_phone_use, 
+                            pattern = "social_media|online_inform_access|mobile_cash_voucher|mobile_banking|contactless_mobile_pay"), "un_expected_response", "expected_response"),
+          m.issue = "mobile_internet: yes but internet_awareness: no",
+          m.other_text = "",
+          m.checked_by = "",
+          m.checked_date = as_date(today()),
+          m.comment = "", 
+          m.reviewed = "",
+          m.adjust_log = "",
+          m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+          m.so_sm_choices = "") %>% 
+   filter(m.issue_id == "un_expected_response") %>% 
+   dplyr::select(starts_with("m.")) %>% 
+   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+view(df_mobile_phone_use)
+   
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_mobile_phone_use")
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
