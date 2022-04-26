@@ -53,7 +53,7 @@ df_no_consent <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_no_consent")
 
 # age below 18
-df_repondent_below_age <-  df_dfa_data %>% 
+df_respondent_age_out_of_range <-  df_dfa_data %>% 
   filter(respondent_age < 18 | respondent_age > 100) %>% 
   mutate(m.type = "remove_survey",
          m.name = "respondent_age",
@@ -72,7 +72,7 @@ df_repondent_below_age <-  df_dfa_data %>%
   dplyr::select(starts_with("m.")) %>% 
   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
-add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_repondent_below_age")
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_age_out_of_range")
 
 
 # data testing
@@ -119,7 +119,7 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_da
 min_survey_time <- 30
 Max_survey_time <- 120
 
-df_child_survey_duration <- df_dfa_data %>% 
+df_survey_duration <- df_dfa_data %>% 
   mutate(interview.survey_duration = lubridate::time_length(end - start, unit = "min"),
          interview.survey_duration = ceiling(interview.survey_duration),
          m.type = "remove_survey",
@@ -142,7 +142,7 @@ df_child_survey_duration <- df_dfa_data %>%
   dplyr::select(starts_with("m.")) %>% 
   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
-add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_child_survey_duration")        
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_survey_duration")        
 
 
 # Time between surveys
@@ -175,7 +175,246 @@ df_time_btn_surveys <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_time_btn_surveys")
 
 
+# logical checks -------------------------------------------------------------
+
+# Anyone who selected "ugandan" and previously answered community_type = refugee, should be checked.
+
+df_respondent_nationality <- df_dfa_data %>% 
+  filter(status == "refugee", nationality == "uganda") %>% 
+  mutate(m.type = "change_response",
+         m.name = "nationality",
+         m.current_value = nationality,
+         m.value = "",
+         m.issue_id = "logic_issue_nationality",
+         m.issue = "nationality: ugandan but community_type: refugee",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "1",
+         m.adjust_log = "",
+         m.uuid_cl = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>%   
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_nationality")
+
+# Anyone who selected host for "type of community" and answers "refugee ID" or "beneficiary ID" should be checked.
+
+df_id_type_selected <- df_dfa_data %>% 
+   filter(status == "host_community", str_detect(string = id_type, pattern = "unhcr_refugee_id|ug_refugee_id|benef_id_not_unhcr")) %>% 
+  mutate(m.type = "change_response",
+         m.name = "id_type",
+         m.current_value = id_type,
+         m.value = "",
+         m.issue_id = "logic_issue_status",
+         m.issue = glue("status: host_community but refugee id_type: {id_type}"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "1",
+         m.adjust_log = "",
+         m.uuid_cl = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>%   
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_nationality")
+
+
+# If respondents have selected a language but have NOT selected the same language that they previously selected for their main language, we need to check the survye.
+
+
+df_language_selected <- df_dfa_data %>% 
+  mutate(m.type = "change_response",
+         m.name = "main_language",
+         m.current_value = main_language,
+         m.value = "",
+         m.issue_id = ifelse(str_detect(string = language_understand, pattern = main_language, negate = TRUE) , 
+                             "logic_issue_main_language", "main_language_also_understood"),
+         m.issue = glue("main_language: {main_language} not in understood languages: {language_understand}"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  filter(m.issue_id == "logic_issue_main_language") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_language_selected")
+
+
+
+# If respondent has selected "none" in addition to another option, the survey needs to be checked.
+# type_phone_owned
+
+df_type_phone_owned <- df_dfa_data %>% 
+  rowwise() %>% 
+  mutate(interview.type_phone_owned_count = sum(c_across(starts_with("type_phone_owned/")), na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  mutate(m.type = "remove_option",
+         m.name = "type_phone_owned",
+         m.current_value = "none",
+         m.value = "none",
+         m.issue_id = ifelse(interview.type_phone_owned_count > 1 & `type_phone_owned/none` == 1, "logic_issue_type_phone_owned", "expected_response"),
+         m.issue = glue("none option selected with other options: {type_phone_owned}"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  filter(m.issue_id == "logic_issue_type_phone_owned") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_type_phone_owned")
+
+
+# If previously selected "0" in response to "how many mobile phone numbers do you have" the survye needs to be checked.
+# walk_top_upun_expected_response
+# add this constraint to odk
+
+df_walk_top_up <- df_dfa_data %>% 
+  filter(walk_top_up %in% c("no_need_to_walk", "regularly_walk", "walk_specifically") , no_phones_hh_owns == 0) %>%
+  mutate(m.type = NA,
+         m.name = "type_phone_owned",
+         m.current_value = "walk_top_up",
+         m.value = "none",
+         m.issue_id = "un_expected_response",
+         m.issue = NA,
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+    dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_walk_top_up")
+    
   
+# If they previously selected "yes" to having mobile internet coverage (Q56) and now replied "no", the survey needs to be checked.
+# mobile_internet == "yes" and internet_awareness == "no"
+
+df_internet_awreness <- df_dfa_data %>% 
+  filter(mobile_internet == "yes", internet_awareness == "no") %>%
+  mutate(m.type = "change_response",
+         m.name = "internet_awareness",
+         m.current_value = internet_awareness,
+         m.value = NA,
+         m.issue_id = "logic_issue_internet_awareness",
+         m.issue = "mobile_internet: yes but internet_awareness: no",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_internet_awreness")
+
+
+# If respondents who previously said they DO NOT have access to a feature phone or smart phone are now selecting uses for their phones that can only be done online (e.g. social media, access to information online etc.), survey needs to be checked
+# # mobile_phone_use
+
+df_mobile_phone_use <- df_dfa_data %>% 
+   filter(str_detect(string = type_phone_owned, pattern = "none|basic_phone")) %>% 
+   mutate(m.type = NA,
+          m.name = "mobile_phone_use",
+          m.current_value = NA,
+          m.value = NA,
+          m.issue_id = ifelse(str_detect(string = mobile_phone_use, 
+                            pattern = "social_media|online_inform_access|mobile_cash_voucher|mobile_banking|contactless_mobile_pay"), "un_expected_response", "expected_response"),
+          m.issue = "mobile_internet: yes but internet_awareness: no",
+          m.other_text = "",
+          m.checked_by = "",
+          m.checked_date = as_date(today()),
+          m.comment = "", 
+          m.reviewed = "",
+          m.adjust_log = "",
+          m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+          m.so_sm_choices = "") %>% 
+   filter(m.issue_id == "un_expected_response") %>% 
+   dplyr::select(starts_with("m.")) %>% 
+   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+view(df_mobile_phone_use)
+   
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_mobile_phone_use")
+   
+
+# If in previous qn "why do you want to have  a mobile money account?" they answered "it is safer than keeping cash at home" and they now asnwered "the system is not safe i am concerned that my money will disappear", survey needs to be checked
+# reason_want_mm_acc/safer_than_home == 1 and reason_not_open_mm_acc/unsafe_system
+
+df_reason_not_open_bank_acc <- df_dfa_data %>% 
+  filter(`reason_want_bank_acc/safe_storage` == 1, `reason_not_open_bank_acc/unsafe_system` == 1) %>% 
+  mutate(m.type = "remove_option",
+         m.name = "reason_not_open_bank_acc",
+         m.current_value = "unsafe_system",
+         m.value = "unsafe_system",
+         m.issue_id = "logic_issue_reason_not_open_bank_acc",
+         m.issue = "reason_want_bank_acc: safer_than_home but reason_not_open_bank_acc: unsafe_system",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_reason_not_open_bank_acc")
+
+
+# if in previous question 'Why do you want to have a pre-paid or smart card?' answered "it will allow me to securely store my money" and they now chose "the system is not safe i am concerned that my money will disappear", check survey
+# reason_want_card/safe_storage and reason_not_want_card/unsafe_system
+
+df_reason_not_want_card <- df_dfa_data %>% 
+  filter(`reason_want_card/safe_storage` == 1, `reason_not_want_card/unsafe_system` == 1) %>% 
+  mutate(m.type = "remove_option",
+         m.name = "reason_not_want_card",
+         m.current_value = "unsafe_system",
+         m.value = "unsafe_system",
+         m.issue_id = "logic_issue_reason_not_want_card",
+         m.issue = "reason_want_card: safer_than_home but reason_not_want_card: unsafe_system",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_reason_not_want_card")
+
+
+
+
+
+
+
 
 
 
