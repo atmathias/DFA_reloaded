@@ -360,6 +360,29 @@ view(df_mobile_phone_use)
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_mobile_phone_use")
    
 
+# If in previous qn "why do you want to have  a mobile money account?" they answered "it is safer than keeping cash at home" and they now asnwered "the system is not safe i am concerned that my money will disappear", survey needs to be checked
+# reason_want_mm_acc/safer_than_home == 1 and reason_not_open_mm_acc/unsafe_system
+
+df_reason_not_open_bank_acc <- df_dfa_data %>% 
+  filter(`reason_want_bank_acc/safe_storage` == 1, `reason_not_open_bank_acc/unsafe_system` == 1) %>% 
+  mutate(m.type = "remove_option",
+         m.name = "reason_not_open_bank_acc",
+         m.current_value = "unsafe_system",
+         m.value = "unsafe_system",
+         m.issue_id = "logic_issue_reason_not_open_bank_acc",
+         m.issue = "reason_want_bank_acc: safer_than_home but reason_not_open_bank_acc: unsafe_system",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_reason_not_open_bank_acc")
 
 
 
