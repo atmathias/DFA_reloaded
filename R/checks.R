@@ -385,6 +385,29 @@ df_reason_not_open_bank_acc <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_reason_not_open_bank_acc")
 
 
+# if in previous question 'Why do you want to have a pre-paid or smart card?' answered "it will allow me to securely store my money" and they now chose "the system is not safe i am concerned that my money will disappear", check survey
+# reason_want_card/safe_storage and reason_not_want_card/unsafe_system
+
+df_reason_not_want_card <- df_dfa_data %>% 
+  filter(`reason_want_card/safe_storage` == 1, `reason_not_want_card/unsafe_system` == 1) %>% 
+  mutate(m.type = "remove_option",
+         m.name = "reason_not_want_card",
+         m.current_value = "unsafe_system",
+         m.value = "unsafe_system",
+         m.issue_id = "logic_issue_reason_not_want_card",
+         m.issue = "reason_want_card: safer_than_home but reason_not_want_card: unsafe_system",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_reason_not_want_card")
 
 
 
