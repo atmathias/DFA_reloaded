@@ -465,9 +465,60 @@ dfa_data_parent_qns <- dfa_arranged_data %>%
 dfa_join_other_response_with_choices <- dfa_data_parent_qns %>% 
   left_join(dfa_grouped_choices, by = "list_name") %>% 
   mutate(issue_id = "other_checks",
-         issue = "other"
-         
-  )
+         issue = "",
+         checked_by = "",
+         checked_date = as_date(today()),
+         comment = "",
+         reviewed = "",
+         adjust_log = ""
+  ) %>% 
+  filter(str_detect(string = current_value, pattern = "other\\b|[a-z]+._other\\b"))
+
+# take care of select_one and select_multiple (change response, add_option, remove_option) 
+output <- list()
+
+# select_one checks
+output$select_one <- dfa_join_other_response_with_choices %>% 
+  filter(str_detect(select_type, c("select_one|select one"))) %>% 
+  mutate(type = "change_response")
+
+# select_multiple checks
+select_multiple_data <- dfa_join_other_response_with_choices %>% 
+  filter(str_detect(select_type, c("select_multiple|select multiple")))
+
+select_multiple_add_option <- select_multiple_data %>% 
+  mutate(type = "add_option")
+select_multiple_remove_option <- select_multiple_data %>% 
+  mutate(type = "remove_option",
+         value = as.character(m.my_current_value_extract))  
+
+output$select_multiple <- bind_rows(select_multiple_add_option, select_multiple_remove_option) %>% 
+  arrange(uuid, start_date, enumerator_id, name)
+
+# merge other checks
+merged_other_checks <- bind_rows(output) %>% 
+  mutate(uuid_cl = paste0(uuid, "_", type, "_", name),
+         so_sm_choices = choice_options) %>% 
+  select(uuid,
+         start_date,
+         enumerator_id,
+         district_name,
+         point_number,
+         type,
+         name,
+         current_value,
+         value,
+         issue_id,
+         issue,
+         other_text,
+         checked_by,
+         checked_date,
+         comment,
+         reviewed,
+         adjust_log,
+         uuid_cl,
+         so_sm_choices)
+}
 
 
 
