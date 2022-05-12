@@ -204,7 +204,7 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_re
 # Anyone who selected host for "type of community" and answers "refugee ID" or "beneficiary ID" should be checked.
 
 df_id_type_selected <- df_dfa_data %>% 
-   filter(status == "host_community", str_detect(string = id_type, pattern = "unhcr_refugee_id|ug_refugee_id|benef_id_not_unhcr")) %>% 
+  filter(status == "host_community", str_detect(string = id_type, pattern = "unhcr_refugee_id|ug_refugee_id|benef_id_not_unhcr")) %>% 
   mutate(m.type = "change_response",
          m.name = "id_type",
          m.current_value = id_type,
@@ -301,12 +301,12 @@ df_walk_top_up <- df_dfa_data %>%
          m.adjust_log = "",
          m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
          m.so_sm_choices = "") %>% 
-    dplyr::select(starts_with("m.")) %>% 
+  dplyr::select(starts_with("m.")) %>% 
   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_walk_top_up")
-    
-  
+
+
 # If they previously selected "yes" to having mobile internet coverage (Q56) and now replied "no", the survey needs to be checked.
 # mobile_internet == "yes" and internet_awareness == "no"
 
@@ -336,29 +336,28 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_in
 # # mobile_phone_use
 
 df_mobile_phone_use <- df_dfa_data %>% 
-   filter(str_detect(string = type_phone_owned, pattern = "none|basic_phone")) %>% 
-   mutate(m.type = NA,
-          m.name = "mobile_phone_use",
-          m.current_value = NA,
-          m.value = NA,
-          m.issue_id = ifelse(str_detect(string = mobile_phone_use, 
-                            pattern = "social_media|online_inform_access|mobile_cash_voucher|mobile_banking|contactless_mobile_pay"), "un_expected_response", "expected_response"),
-          m.issue = "mobile_internet: yes but internet_awareness: no",
-          m.other_text = "",
-          m.checked_by = "",
-          m.checked_date = as_date(today()),
-          m.comment = "", 
-          m.reviewed = "",
-          m.adjust_log = "",
-          m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
-          m.so_sm_choices = "") %>% 
-   filter(m.issue_id == "un_expected_response") %>% 
-   dplyr::select(starts_with("m.")) %>% 
-   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
-view(df_mobile_phone_use)
-   
+  filter(str_detect(string = type_phone_owned, pattern = "none|basic_phone")) %>% 
+  mutate(m.type = NA,
+         m.name = "mobile_phone_use",
+         m.current_value = NA,
+         m.value = NA,
+         m.issue_id = ifelse(str_detect(string = mobile_phone_use, 
+                                        pattern = "social_media|online_inform_access|mobile_cash_voucher|mobile_banking|contactless_mobile_pay"), "un_expected_response", "expected_response"),
+         m.issue = "mobile_internet: yes but internet_awareness: no",
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  filter(m.issue_id == "un_expected_response") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_mobile_phone_use")
-   
+
 
 # If in previous qn "why do you want to have  a mobile money account?" they answered "it is safer than keeping cash at home" and they now asnwered "the system is not safe i am concerned that my money will disappear", survey needs to be checked
 # reason_want_mm_acc/safer_than_home == 1 and reason_not_open_mm_acc/unsafe_system
@@ -412,15 +411,63 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_re
 
 
 
+# other_checks ------------------------------------------------------------
+
+# add and rename some columns
+df_dfa_tool_data <- df_dfa_data %>% 
+  rename(uuid = `_uuid`) %>% 
+  mutate(start_date = as_date(start))
+
+# get questions with other
+other_variable_names <-  df_dfa_data %>% 
+  select(ends_with("other"), -contains("/")) %>% 
+  colnames()
 
 
+# data.frame for holding _other response data
+dfa_other_response_data <- data.frame()
 
+for (cln in other_variable_names) {
+  
+  current_parent_qn = str_replace_all(string = cln, pattern = "_other", replacement = "")
+  
+  dfa_filtered_data <- df_dfa_tool_data %>% 
+    select(-contains("/")) %>% 
+    select(uuid, start_date, enumerator_id, district_name, point_number, other_text = cln,
+           current_value = current_parent_qn) %>% 
+    filter(!is.na(other_text), !other_text %in% c(" ", "NA")) %>% 
+    mutate(other_name = cln,
+           m.my_current_value_extract = ifelse(str_detect(current_value, "other\\b"), str_extract_all(string = current_value, pattern = 
+                                                                                                        "other\\b|[a-z]+._other\\b"), current_value ),
+           value = "",
+           parent_qn = current_parent_qn)       
+  
+  dfa_other_response_data <- rbind(dfa_other_response_data, dfa_filtered_data)
+}
 
+# arrange data
+dfa_arranged_data <- dfa_other_response_data %>% 
+  arrange(start_date, uuid)
 
+# get choices to add to the _other responses extracted
+dfa_grouped_choices <- df_dfa_choices %>% 
+  group_by(list_name) %>% 
+  summarize(choice_options = paste(name, collapse = " : ")) %>% 
+  arrange(list_name)  
 
+# extract parent question and join survey for existing list_name
+dfa_data_parent_qns <- dfa_arranged_data %>% 
+  left_join(df_dfa_survey %>% select(name, type), by = c("parent_qn"="name")) %>% 
+  separate(col = type, into = c("select_type", "list_name"), sep = " ", remove = TRUE, extra = "drop") %>% 
+  rename(name = parent_qn)
 
-
-
+# join other responses with choice based on list_name
+dfa_join_other_response_with_choices <- dfa_data_parent_qns %>% 
+  left_join(dfa_grouped_choices, by = "list_name") %>% 
+  mutate(issue_id = "other_checks",
+         issue = "other"
+         
+  )
 
 
 
