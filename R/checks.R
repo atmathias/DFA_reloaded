@@ -593,8 +593,56 @@ dfa_sample_data_threshold <- df_dfa_sample_data %>%
  dfa_tool_data_threshold <- df_dfa_data %>% 
    mutate(unique_pt_number = paste0(status, "_", point_number)) %>% 
    sf::st_as_sf(coords = c("_geopoint_longitude","_geopoint_latitude"), crs = 4326) 
+ 
+ # sample_data_unique_pts
+ sample_data_unique_pts <- dfa_sample_data_threshold %>%  
+ pull(unique_pt_number) %>% 
+ unique()
+ 
+ # tool_data_unique_pts
+ tool_data_unique_pts <- dfa_tool_data_threshold %>% 
+   pull(unique_pt_number) %>% 
+   unique()
   
+ sample_pt_nos_thresh <- sample_data_unique_pts[sample_data_unique_pts %in% tool_data_unique_pts]
+ 
+ if(length(sample_pt_nos_thresh) > 0) {
+   
+   # tibble to hold data
+   dfa_data_with_distance <- tibble()
+   
+     for (pt_number in sample_pt_nos_thresh){
+    current_sample <- dfa_sample_data_threshold %>% 
+    filter(unique_pt_number == pt_number)
+    current_tool_data <- dfa_tool_data_threshold %>% 
+    filter(unique_pt_number == pt_number) 
   
+    if(nrow(current_tool_data) > 0){
+      current_sample_target_dist <- sf::st_distance(x = current_sample, y = current_tool_data, by_element = TRUE)  
+      
+      current_data_with_dist <- current_tool_data %>% 
+        sf::st_drop_geometry() %>% 
+        mutate(distance = round(x = current_sample_target_dist, digits = 0))
+      
+      dfa_data_with_distance <- bind_rows(dfa_data_with_distance, current_data_with_dist)    
+   }
+   
+ }
+ 
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
   
   
   
