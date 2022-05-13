@@ -29,7 +29,7 @@ df_dfa_sample_data <- sf::st_read("inputs/dfa_settlement_host_samples.gpkg", qui
 
 # Logical flow
 
-logical_output <- list()
+logic_output <- list()
 
 # data not meeting minimal requirements---------------------------------------
 
@@ -226,7 +226,7 @@ df_id_type_selected <- df_dfa_data %>%
   dplyr::select(starts_with("m.")) %>% 
   rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
 
-add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_respondent_nationality")
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_id_type_selected")
 
 
 # If respondents have selected a language but have NOT selected the same language that they previously selected for their main language, we need to check the survye.
@@ -655,7 +655,9 @@ dfa_sample_data_threshold <- df_dfa_sample_data %>%
    
  }
  
+ dfa_combined_checks <- bind_rows(logic_output)
  
+ write_csv(x = dfa_combined_checks, file = paste0("outputs/", butteR::date_file_prefix(), "_all_checks_combined.csv"), na = "")
  
  
  
