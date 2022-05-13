@@ -581,8 +581,26 @@ df_k_pt_not_in_sample <- df_dfa_data %>%
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_k_pt_not_in_sample")
 
 
+# distance exceeds threshold
 
+threshold_dist <- 150
 
-
+dfa_sample_data_threshold <- df_dfa_sample_data %>% 
+  mutate(unique_pt_number = paste0(status, "_",Name)) %>% 
+  sf::st_transform(4326)
+  
+  
+ dfa_tool_data_threshold <- df_dfa_data %>% 
+   mutate(unique_pt_number = paste0(status, "_", point_number)) %>% 
+   sf::st_as_sf(coords = c("_geopoint_longitude","_geopoint_latitude"), crs = 4326) 
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 
