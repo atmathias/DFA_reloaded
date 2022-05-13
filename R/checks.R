@@ -583,7 +583,7 @@ add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_k_
 
 # distance exceeds threshold
 
-threshold_dist <- 150
+threshold_distance <- 150
 
 dfa_sample_data_threshold <- df_dfa_sample_data %>% 
   mutate(unique_pt_number = paste0(status, "_",Name)) %>% 
@@ -629,6 +629,30 @@ dfa_sample_data_threshold <- df_dfa_sample_data %>%
    
  }
  
+  # format data the required way
+   
+   df_k_dist_greater_than_threshold <- dfa_data_with_distance %>% 
+     filter(as.numeric(distance) >= threshold_distance) %>% 
+     mutate(m.type = "remove_survey",
+            m.name = "point_number",
+            m.current_value = point_number,
+            m.value = "",
+            m.issue_id = "spatial_k_distance_to_sample_greater_than_threshold ",
+            m.issue = glue("{distance} m greater_than_threshold:{threshold_dist} m"),
+            m.other_text = "",
+            m.checked_by = "",
+            m.checked_date = as_date(today()),
+            m.comment = "", 
+            m.reviewed = "",
+            m.adjust_log = "",
+            m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+            m.so_sm_choices = "") %>% 
+     dplyr::select(starts_with("m.")) %>% 
+     rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+   
+   add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_k_dist_greater_than_threshold")
+   
+   
  }
  
  
