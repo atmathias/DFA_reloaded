@@ -24,6 +24,9 @@ df_dfa_survey <- readxl::read_excel("inputs/UGA2103_Digital_Finace_HH_Tool_June2
 # Load survey choices sheet
 df_dfa_choices <-  readxl::read_excel("inputs/UGA2103_Digital_Finace_HH_Tool_June2021.xlsx", sheet = "choices")
 
+# load sample data
+df_dfa_sample_data <- sf::st_read("inputs/dfa_settlement_host_samples.gpkg", quiet = TRUE)
+
 # Logical flow
 
 logical_output <- list()
@@ -518,10 +521,40 @@ merged_other_checks <- bind_rows(output) %>%
          adjust_log,
          uuid_cl,
          so_sm_choices)
-}
 
 
 
+# spatial checks ----------------------------------------------------------
+
+sample_pt_nos <- df_dfa_sample_data %>% 
+  mutate(unique_pt_number = paste0(status, "_", Name)) %>% 
+  pull(unique_pt_number) %>% 
+  unique()
+
+# duplicate point numbers
+
+df_k_duplicate_pt_nos <- df_dfa_data %>% 
+  mutate(unique_pt_number = paste0(status, "_", point_number )) %>% 
+  group_by(m.district_name, status, m.point_number) %>% 
+  filter(n() > 1, unique_pt_number %in% sample_pt_nos) %>% 
+  mutate(m.type = "change_response",
+         m.name = "point_number",
+         m.current_value = point_number,
+         m.value = NA,
+         m.issue_id = "spatial_c_duplicate_pt_no",
+         m.issue = glue("point_number: {point_number} is duplicated: check that its not a repeated survey"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_k_duplicate_pt_nos")
 
 
 
