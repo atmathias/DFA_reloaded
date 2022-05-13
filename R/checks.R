@@ -556,7 +556,29 @@ df_k_duplicate_pt_nos <- df_dfa_data %>%
 
 add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_k_duplicate_pt_nos")
 
+# point id does not exist in sample
 
+df_k_pt_not_in_sample <- df_dfa_data %>% 
+  mutate(unique_pt_number = paste0(status, "_", point_number)) %>% 
+  filter((!unique_pt_number %in% sample_pt_nos)) %>% 
+  mutate(m.type = "change_response",
+         m.name = "point_number",
+         m.current_value = point_number,
+         m.value = NA,
+         m.issue_id = "spatial_k_pt_no_not_in_sample",
+         m.issue = glue("point_number: {point_number} not in samples"),
+         m.other_text = "",
+         m.checked_by = "",
+         m.checked_date = as_date(today()),
+         m.comment = "", 
+         m.reviewed = "",
+         m.adjust_log = "",
+         m.uuid_cl = paste0(m.uuid, "_", m.type, "_", m.name),
+         m.so_sm_choices = "") %>% 
+  dplyr::select(starts_with("m.")) %>% 
+  rename_with(~str_replace(string = .x, pattern = "m.", replacement = ""))
+
+add_checks_data_to_list(input_list_name = "logic_output", input_df_name = "df_k_pt_not_in_sample")
 
 
 
