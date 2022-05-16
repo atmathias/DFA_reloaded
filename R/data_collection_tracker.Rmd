@@ -66,10 +66,44 @@ dfa_tool_data <- readxl::read_excel("../inputs/UGA2103_Financial_Service_Provide
         ))
           
         
+ # days that contain data
+dfa_days_for_data_collection <- dfa_tool_data %>% 
+  select(start_date) %>% 
+  unique() %>% 
+  arrange(start_date) %>% 
+  pull()
          
          
-         
-         
+dfa_data_support_cl_log <- dfa_tool_data %>% 
+  select(uuid, status, sub_county_name, settlement_name, latitude, longitude)
+
+# Handling cleaning log
+dfa_cl_log <- read_csv(file = "../inputs/combined_logic_spatial_and_others_checks.csv") %>% 
+  mutate(adjust_log = ifelse(is.na(adjust_log), "apply_suggested_change", adjust_log)) %>% 
+  left_join(dfa_data_support_cl_log, by = "uuid")
+  
+# change response logs which affect stats during data collection
+
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
          
          
          
