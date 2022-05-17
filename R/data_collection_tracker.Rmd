@@ -168,10 +168,17 @@ group_by(district_name, enumerator_id) %>%
 ### Number of issues by issue_id
 
 ```{r, echo = FALSE}
-
 dfa_cl_log %>% 
   group_by(issue_id) %>% 
   summarise(number_of_issues_by_issue_id = n()) %>%
+  DT::datatable()
+```
+### Number of issues by enumerator
+
+```{r, echo = FALSE}
+dfa_cl_log %>% 
+  group_by(enumerator_id) %>% 
+  summarise(number_of_issues_by_enumerator_id = n()) %>% 
   DT::datatable()
 
 ```
