@@ -122,22 +122,35 @@ dfa_enum_performance <- dfa_updated_tool_data %>%
 
 ```
 
-```{r}
+## Summary of the surveys done
 
+> There are **`r nrow(dfa_updated_tool_data)`** total number of surveys done as of **`r
+dfa_days_for_data_collection[length(dfa_days_for_data_collection)]`**.
 
+### Settlements:  **`r dfa_updated_tool_data %>% filter (status == "refugee") %>% nrow() `** surveys
 
+```{r, echo=FALSE}
+dfa_refugee_samp_per_settlement <- dfa_settlement_samples_required %>% 
+  group_by(settlement_name) %>% 
+  summarise(required_samples = sum(smpl_sz, na.rm = TRUE))
 
+dfa_cl_surveys_for_deletion <- dfa_cl_log %>% 
+  filter(status == "refugee", type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>%
+  group_by(settlement_name) %>% 
+  distinct(uuid) %>%
+  summarise(surveys_for_deletion = n())
 
-
-
-
-
-
-
-
-
-
-
+dfa_updated_tool_data %>% 
+  filter(status == "refugee") %>% 
+  group_by(district_name, settlement_name) %>% 
+  summarise(number_of_surveys = n()) %>% 
+  arrange(district_name) %>% 
+  left_join(dfa_refugee_samp_per_settlement, by = "settlement_name") %>% 
+  left_join(dfa_cl_surveys_for_deletion, by = "settlement_name") %>% 
+  mutate(int.surveys_and_deletion = ifelse(is.na(surveys_for_deletion), number_of_surveys, number_of_surveys - surveys_for_deletion),
+         remaining_surveys = required_samples - int.surveys_and_deletion ) %>% 
+  select(-int.surveys_and_deletion) %>% 
+  DT::datatable()
 
 
 
