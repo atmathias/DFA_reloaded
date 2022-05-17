@@ -151,6 +151,32 @@ dfa_updated_tool_data %>%
          remaining_surveys = required_samples - int.surveys_and_deletion ) %>% 
   select(-int.surveys_and_deletion) %>% 
   DT::datatable()
+```
+### Host community: **`r dfa_updated_tool_data %>% filter(status == "host_community") %>% nrow()`** surveys 
+
+```{r, echo=FALSE} 
+dfa_host_samp_per_sub_county <- dfa_host_samples_required %>% 
+  group_by(sub_county_name) %>% 
+  summarise(required_samples = sum(smpl_sz, na.rm = TRUE))
+
+dfa_cl_surveys_for_deletion <- dfa_cl_log %>% 
+  filter(status == "host_community", type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>%
+  group_by(sub_county_name) %>% 
+  distinct(uuid) %>%
+  summarise(surveys_for_deletion = n())
+
+dfa_updated_tool_data %>% 
+  filter(status == "host_community") %>% 
+  group_by(district_name, sub_county_name) %>% 
+  summarise(number_of_surveys = n()) %>% 
+  arrange(district_name) %>% 
+  left_join(dfa_host_samp_per_sub_county, by = "sub_county_name") %>% 
+  left_join(dfa_cl_surveys_for_deletion, by = "sub_county_name") %>% 
+  mutate(int.surveys_and_deletion = ifelse(is.na(surveys_for_deletion), number_of_surveys, number_of_surveys - surveys_for_deletion),
+         remaining_surveys = required_samples - int.surveys_and_deletion ) %>% 
+  select(-int.surveys_and_deletion) %>% 
+  DT::datatable()
+
 
 ```
 ### Daily enumerator perfomance
@@ -188,6 +214,17 @@ dfa_cl_log %>%
   group_by(enumerator_id, issue_id) %>% 
   summarise(number_of_issues_by_enumerator_and_by_issue_id = n()) %>%
   DT::datatable()
+```
+### Enumerators with surveys for deletion
+
+```{r, echo = FALSE}
+dfa_cl_log %>% 
+  filter(type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>% 
+  group_by(enumerator_id) %>% 
+  summarise(number_of_surveys_for_deletion_by_enumerator = n()) %>%
+  DT::datatable()
+
+
 
 ```
 
