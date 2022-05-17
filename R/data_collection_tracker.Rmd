@@ -157,11 +157,22 @@ dfa_updated_tool_data %>%
 The average time for all the data is: **`r round(mean(dfa_enum_performance$int.survey_time_interval), 0)`** Minutes
 
 
-```{r}
+```{r, echo = FALSE}
 dfa_enum_performance %>% 
 group_by(district_name, enumerator_id) %>% 
   summarise(number_of_interviews_done = n(), `average_survey_time(minutes)` = round(mean(int.survey_time_interval, na.rm = TRUE), 0))%>%
   DT::datatable()
-  
+```
+## Looking into the cleaning log
+
+### Number of issues by issue_id
+
+```{r, echo = FALSE}
+
+dfa_cl_log %>% 
+  group_by(issue_id) %>% 
+  summarise(number_of_issues_by_issue_id = n()) %>%
+  DT::datatable()
+
 ```
 
