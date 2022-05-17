@@ -115,22 +115,17 @@ dfa_updated_tool_data <- dfa_tool_data
   dfa_updated_tool_data <- dfa_current_updated
 } 
 
+  # enumerator performance data
+dfa_enum_performance <- dfa_updated_tool_data %>% 
+  mutate(int.survey_time_interval = lubridate::time_length(end - start, unit = "min"),
+         int.survey_time_interval = ceiling(int.survey_time_interval)) 
+
+```
+
+```{r}
 
 
 
-
-
-
-
-
-
-
-
-         
-         
-         
-
-  
 
 
 
