@@ -1,13 +1,13 @@
 ---
 title: "DFA daily progress report"
-author: "Mathias"
-date: "5/16/2022"
+author: "Mathias T"
+date: "16/05/2022"
 output: 
   html_document:
-  toc: true
-  toc_float:
-    collapsed: false 
-    smooth_scroll: false
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
 knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = paste0(dirname(inputFile), '/field_data_collection_tracker_', format(Sys.Date(), '%Y_%m_%d'),'.html')) })
 ---
 
@@ -38,7 +38,7 @@ dfa_host_samples_required <- readxl::read_excel("../inputs/samples_host_sub_defi
   select(sub_county_name, smpl_sz)
  
 dfa_tool_data <- readxl::read_excel("../inputs/UGA2103_Financial_Service_Providers_Assessment_HH_Tool_June2021.xlsx") %>% 
-  mutate(uuid = '_uuid',
+  mutate(uuid = `_uuid`,
          start_date = as_date(start),
          start = as_datetime(start),
          end = as_datetime(end),
@@ -124,8 +124,7 @@ dfa_enum_performance <- dfa_updated_tool_data %>%
 
 ## Summary of the surveys done
 
-> There are **`r nrow(dfa_updated_tool_data)`** total number of surveys done as of **`r
-dfa_days_for_data_collection[length(dfa_days_for_data_collection)]`**.
+> There are **`r nrow(dfa_updated_tool_data)`** total number of surveys done as of **`r dfa_days_for_data_collection[length(dfa_days_for_data_collection)]`**.
 
 ### Settlements:  **`r dfa_updated_tool_data %>% filter (status == "refugee") %>% nrow() `** surveys
 
