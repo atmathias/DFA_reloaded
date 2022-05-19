@@ -95,6 +95,11 @@ kbo_loops_data <- kobold::kobold(survey = dfa_survey,
 
 dfa_choices_modified <- butteR:::xlsform_add_choices(kobold = kbo_loops_data, new_choices = new_vars)
 
+ # special treat for variables for select_multiple, we need to add the columns to the data itself
+dfa_survey_sm <- dfa_survey %>% 
+  mutate(qn_type = case_when(str_detect(string = type, pattern = "select_multiple|select multiple") ~ "sm",
+                             TRUE ~ type)) %>% 
+  select(name, qn_type)
 
 
 
