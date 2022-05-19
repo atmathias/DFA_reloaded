@@ -83,9 +83,17 @@ filter(consent == "yes", respondent_age >=18,
    arrange(name)
 
 
+# create kobold object ----------------------------------------------------
+
+kbo_loops_data <- kobold::kobold(survey = dfa_survey,
+                                  choices = dfa_choices,
+                                  data = dfa_raw_data,
+                                  cleaning = dfa_cleaning_log)
 
 
+# modified choices for the survey tool ------------------------------------
 
+dfa_choices_modified <- butteR:::xlsform_add_choices(kobold = kbo_loops_data, new_choices = new_vars)
 
 
 
