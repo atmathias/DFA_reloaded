@@ -102,7 +102,11 @@ dfa_survey_sm <- dfa_survey %>%
   select(name, qn_type)
 
 
-
+# construct new columns for select multiple
+new_vars_sm <- new_vars %>% 
+  left_join(dfa_survey_sm, by = "name") %>% 
+  filter(qn_type == "sm") %>% 
+  mutate(new_cols = paste0(name, "/", choice))
 
 
 
