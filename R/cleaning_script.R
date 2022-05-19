@@ -150,29 +150,5 @@ for (cur_sm_col in sm_colnames) {
 
 dfa_final_cleaned_data <- dfa_handle_sm_data
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# write final modified data -----------------------------------------------
+write_csv(dfa_final_cleaned_data, file = paste0("outputs/", butteR::date_file_prefix(), "_clean_data.csv"))
